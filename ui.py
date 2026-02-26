@@ -1,8 +1,9 @@
+from PIL import Image, ImageTk
+from io import BytesIO
 import tkinter as tk 
 import ttkbootstrap as ttk
 from tkinter import messagebox, filedialog
-from back import Backend
-
+from backend import Backend
 
 class Window:
     """Manages the YouTube Downloader UI."""
@@ -36,6 +37,10 @@ class Window:
         # Progress widgets
         self.progress_bar = None
         self.progress_label = None
+
+        # thumbnail and title display
+        self.thumbnail_label = None
+        self.title_label = None
         
     def setup(self):
         """Initialize the window and all UI elements."""
@@ -48,7 +53,7 @@ class Window:
     def _setup_root(self):
         """Configure the root window."""
         self.window.title('YouTube Downloader')
-        self.window.geometry('900x450')
+        self.window.geometry('900x600')
         self.window.resizable(False, False)
 
     def _setup_title(self):
@@ -147,6 +152,30 @@ class Window:
         # Don't show progress frame until download starts
         self.progress_frame.pack_forget()
 
+    def display_thumbnail_and_title(self, response, title=None):
+        """Get thumbnail response and display thumbnail on the UI."""
+        try:
+            # Open the image using Pillow from the in-memory bytes
+            image = Image.open(BytesIO(response.content))
+        except IOError as e:
+            print(f"Error opening image with Pillow: {e}. The thumbnail might not exist for this video/resolution.")
+        thumbnail = ImageTk.PhotoImage(image)
+        self.thumbnail_label = ttk.Label(self.window, image=thumbnail)
+        self.thumbnail_label.image = thumbnail  # Keep a reference to avoid garbage collection
+        self.thumbnail_label.pack(pady=10)
+
+        if title:
+            self.title_label = ttk.Label(master=self.window, text=title, font='Arial 12 bold')
+            self.title_label.pack(pady=5)
+
+    def clear_thumbnail_and_title(self):
+        """Clear thumbnail and title display."""
+        self.thumbnail_label.config(image='')  # Clear the image
+        self.thumbnail_label.image = None  # Remove reference to the image
+        self.thumbnail_label.pack_forget()  # Hide the label
+        self.title_label.pack_forget()  # Hide the title label
+
+
     def show_error(self, title, message):
         """Display an error dialog."""
         messagebox.showerror(title, message)
@@ -159,9 +188,9 @@ class Window:
         """Display a yes/no dialog."""
         return messagebox.askyesno(title, message)
 
-    def ask_directory(self):
+    def ask_directory(self, initial_dir=None):
         """Show directory selection dialog."""
-        return filedialog.askdirectory(title="Select Download Location")
+        return filedialog.askdirectory(initialdir=initial_dir, title="Select Download Location")
 
     def show_progress(self):
         """Display the progress frame."""
@@ -174,3 +203,8 @@ class Window:
     def run(self):
         """Start the application."""
         self.window.mainloop()
+
+if __name__ == "__main__":
+    app = Window()
+    app.setup()
+    app.run()

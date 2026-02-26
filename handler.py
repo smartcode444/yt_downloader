@@ -1,6 +1,4 @@
 import yt_dlp
-import os
-import re
 from tkinter import messagebox
 
 
@@ -56,44 +54,6 @@ class VideoHandler:
         # Sort by resolution and fps
         metadata_list.sort(key=lambda x: (x['res'], x['fps'] or 0), reverse=True)
         return metadata_list
-
-
-
-    # def fetch_metadata(self):
-    #     """Fetch metadata for a given video URL."""
-        
-    #     ydl_opts = {}
-    #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    #         self.metadata = ydl.extract_info(self.url, download=False)
-    #         self.title = self.metadata.get('title', 'Unknown Video')
-
-    #         formats = self.metadata.get('formats', [])
-
-    #         # User friendly info of vcode
-    #         def simplify_vcodec(vcodec):
-    #             if 'av01' in vcodec: return "Best Quality (AV1)"
-    #             if 'vp9' in vcodec:  return "High Quality (VP9)"
-    #             if 'avc1' in vcodec: return "Most Compatible (H.264)"
-    #             return vcodec
-
-    #         metadata = []
-    #         # Extract id, res, fps...  and format them and store them ask as key-value pairs ina dict which is then stored in a list
-    #         for format in formats:
-    #             if format.get('height') and format.get('acodec') == 'none':
-    #                 metadata.append({
-    #                 'id': format['format_id'],
-    #                 'res': format['height'],
-    #                 'fps': format['fps'],
-    #                 'vcodec_raw': format['vcodec'],
-    #                 'vcodec_name': simplify_vcodec(format['vcodec']),
-    #                 'size': format.get('filesize') or 0
-    #             })
-    #             # Sort by fps and res
-    #             metadata.sort(key=lambda choice: (choice['res'], choice['fps']), reverse=True)
-    #     return metadata
-        
-        # except Exception as e:
-        #     messagebox.showerror("Error", f"Could not fetch video: {e} \nPlease check your internet connection and input a valid URL")
 
 
     def start_download(self, format_id, save_path, output_format, progress_callback):

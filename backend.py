@@ -1,7 +1,10 @@
 import threading
 import re
+import os
+from tkinter import filedialog
 from handler import VideoHandler
-
+from thumbnail import fetch_thumbnail_response
+from save_path import get_stored_path, store_save_path
 
 class Backend:
     """Handles business logic between UI and video handler."""
@@ -35,6 +38,12 @@ class Backend:
             
             self.window.hide_progress()
             self.window.show_info("Success", f"Video loaded: {self.handler.title}")
+
+            # Fetch and display thumbnail
+            thumbnail_response = fetch_thumbnail_response(self.handler.metadata.get('id'))
+            title = self.handler.title
+            if thumbnail_response:
+                self.window.display_thumbnail_and_title(thumbnail_response, title=title)
             
         except Exception as e:
             self.window.hide_progress()
@@ -135,16 +144,21 @@ class Backend:
                 self.window.show_error("Error", "Could not find matching format")
                 return
         
-        # Ask for save location
-        save_path = self.window.ask_directory()
-        if not save_path:
-            return
+        # Get stored save path or ask user to select one
+        self.save_path = get_stored_path()
+        if self.save_path:
+            self.save_path = self.window.ask_directory(initial_dir=self.save_path)
+            store_save_path(self.save_path)
+        else:
+            self.save_path = self.window.ask_directory()
+            store_save_path(self.save_path)
+        
         
         # Start download in background thread
         self.window.show_progress()
         download_thread = threading.Thread(
             target=self._download_worker,
-            args=(format_id, save_path, selected_format),
+            args=(format_id, self.save_path, selected_format),
             daemon=True
         )
         download_thread.start()
@@ -170,14 +184,14 @@ class Backend:
             )
         finally:
             self.window.window.after(0, self.window.hide_progress)
+            self.window.window.after(0, self.window.clear_thumbnail_and_title)
 
     def _on_download_complete(self):
         """Called when download completes successfully."""
         self.window.show_info("Success", "Download completed!")
         
         if self.window.ask_yes_no("Success", "Open download folder?"):
-            import os
-            os.startfile(self.window.ask_directory.__self__.save_path)
+            os.startfile(self.save_path)
 
     def _progress_callback(self, d):
         """Callback for yt_dlp progress updates."""
