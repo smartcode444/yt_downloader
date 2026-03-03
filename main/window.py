@@ -3,7 +3,7 @@ from io import BytesIO
 import tkinter as tk 
 import ttkbootstrap as ttk
 from tkinter import messagebox, filedialog
-from backend import Backend
+from main.backend import Backend
 
 class Window:
     """Manages the YouTube Downloader UI."""
@@ -41,6 +41,8 @@ class Window:
         # thumbnail and title display
         self.thumbnail_label = None
         self.title_label = None
+
+        self.cancel_btn = None
         
     def setup(self):
         """Initialize the window and all UI elements."""
@@ -49,11 +51,18 @@ class Window:
         self._setup_input()
         self._setup_action()
         self._setup_progress()
+        self.author_info()  
 
     def _setup_root(self):
         """Configure the root window."""
+        width = self.window.winfo_screenwidth()
+        height = self.window.winfo_screenheight()
+        window_width = 800
+        window_height = 600
+        window_x = int(width - window_width) // 2
+        window_y = int(height - window_height) // 2
         self.window.title('YouTube Downloader')
-        self.window.geometry('900x600')
+        self.window.geometry(f'{window_width}x{window_height}+{window_x}+{window_y}')
         self.window.resizable(False, False)
 
     def _setup_title(self):
@@ -79,7 +88,7 @@ class Window:
         )
         fetch_btn.pack(side='left', padx=5)
         
-        frame.pack(pady=20)
+        frame.pack(pady=10)
 
     def _setup_action(self):
         """Add selection comboboxes and download button."""
@@ -101,7 +110,7 @@ class Window:
         self.res_combo = ttk.Combobox(
             master=self.action_frame,
             textvariable=self.res_var,
-            width=10,
+            width=10, 
             state="readonly"
         )
         self.res_combo.pack(side='left', padx=5)
@@ -129,6 +138,20 @@ class Window:
         
         self.action_frame.pack(pady=10)
 
+    def _loading_indicator(self):
+        """Show a loading indicator while fetching video metadata."""
+        self.loading_label = ttk.Label(
+            master=self.window,
+            text="Loading video information...",
+            font='Arial 12 italic'
+        )
+        self.loading_label.pack(pady=10)
+
+    def _clear_loading_indicator(self):
+        """Remove the loading indicator."""
+        if hasattr(self, 'loading_label'):
+            self.loading_label.destroy()
+
     def _setup_progress(self):
         """Add progress bar and status label."""
         self.progress_frame = ttk.Frame(master=self.window)
@@ -140,7 +163,7 @@ class Window:
             length=400,
             bootstyle="success-striped",
         )
-        self.progress_bar.pack(pady=20)
+        self.progress_bar.pack(pady=10)
         
         self.progress_label = ttk.Label(
             master=self.progress_frame,
@@ -149,6 +172,15 @@ class Window:
         )
         self.progress_label.pack(pady=10)
         
+        # Add cancel button
+        self.cancel_btn = ttk.Button(
+            master=self.progress_frame,
+            text='Cancel',
+            bootstyle='danger',
+            command=self.backend.stop_download
+        )
+        self.cancel_btn.pack(pady=5)
+
         # Don't show progress frame until download starts
         self.progress_frame.pack_forget()
 
@@ -174,7 +206,6 @@ class Window:
         self.thumbnail_label.image = None  # Remove reference to the image
         self.thumbnail_label.pack_forget()  # Hide the label
         self.title_label.pack_forget()  # Hide the title label
-
 
     def show_error(self, title, message):
         """Display an error dialog."""
@@ -203,6 +234,19 @@ class Window:
     def run(self):
         """Start the application."""
         self.window.mainloop()
+
+    def author_info(self):
+        """Display author information."""
+        footer_frame = ttk.Frame(self.window)
+        footer_frame.pack(side="bottom", fill="x") 
+
+        ttk.Label(
+            master=footer_frame,
+            text="YouTube Downloader\n"
+                 "Created by: smartcode.dev\n"
+                 "GitHub: https://github.com/smartcode444/yt-downloader\n",
+            font='Arial 7'
+        ).pack(side="left")
 
 if __name__ == "__main__":
     app = Window()

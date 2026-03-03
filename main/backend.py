@@ -1,10 +1,9 @@
 import threading
 import re
 import os
-from tkinter import filedialog
 from main.handler import VideoHandler
 from main.thumbnail import fetch_thumbnail_response
-from main.save_path import get_save_path, store_save_path
+from main.path import get_save_path, store_save_path
 
 class Backend:
     """Handles business logic between UI and video handler."""
@@ -14,13 +13,12 @@ class Backend:
         self.handler = VideoHandler()
         self.video_data = None
         self.selected_format = None
+        self.cancel_event = threading.Event()
 
     def validate_url(self, url):
         """Basic validation for YouTube URLs."""
         pattern = re.match(
-            r'^(https?://)?(www\.)?'
-            r'(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)'
-            r'[\w-]{11}(&.*)?$', 
+            r'^(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)[\w-]{11}(.*)?$', 
             url, 
             re.IGNORECASE 
         )
@@ -40,9 +38,8 @@ class Backend:
 
         try:
             # Show loading message
-            self.window.progress_label.config(text="Fetching video info...")
-            self.window.show_progress()
-            self.window.window.update()
+            self.window._loading_indicator()
+            self.window.window.update() # 
             
             # Fetch metadata
             self.video_data = self.handler.fetch_metadata(url)
@@ -51,11 +48,13 @@ class Backend:
             self.window.format_combo['values'] = ['mkv', 'mp4', 'mp3']
             self.window.format_combo.current(0)
             
-            self.window.hide_progress()
+            self.window._clear_loading_indicator()
             self.window.show_info("Success", f"Video loaded: {self.handler.title}")
 
             # Fetch and display thumbnail
-            self.window.clear_thumbnail_and_title()
+            if self.window.thumbnail_label and self.window.title_label:
+                self.window.clear_thumbnail_and_title()
+           
             thumbnail_response = fetch_thumbnail_response(self.handler.metadata.get('id'))
             title = self.handler.title
             if thumbnail_response:
@@ -68,7 +67,6 @@ class Backend:
                 f"Could not fetch video: {str(e)}\n\nPlease check:\n• Internet connection\n• Valid YouTube URL"
             )
  
-    
 
     def on_format_selected(self, event=None):
         """Handle format selection change."""
@@ -101,7 +99,7 @@ class Backend:
     
     def _populate_resolutions(self):
         """Populate resolution dropdown."""
-        res_strings = Backend.resolutions()
+        res_strings = self.resolutions()
         self.window.res_combo['values'] = res_strings
         if res_strings:
             self.window.res_combo.current(0)
@@ -183,7 +181,9 @@ class Backend:
             self.save_path = self.window.ask_directory()
             store_save_path(self.save_path)
         
-        
+        # Clear the cancel event before starting new download
+        self.cancel_event.clear()
+
         # Start download in background thread
         self.window.show_progress()
         download_thread = threading.Thread(
@@ -193,6 +193,11 @@ class Backend:
         )
         download_thread.start()
 
+    def stop_download(self):
+        """Signal the download thread to stop."""
+        self.cancel_event.set()
+
+
     def _download_worker(self, format_id, save_path, output_format):
         """Background worker for downloading video."""
         try:
@@ -200,7 +205,8 @@ class Backend:
                 format_id,
                 save_path,
                 output_format,
-                self._progress_callback
+                self._progress_callback,
+                self.cancel_event
             )
             
             # Success
@@ -208,6 +214,8 @@ class Backend:
             
         except Exception as e:
             error_msg = str(e)
+            if self.cancel_event.is_set():
+                error_msg = "Download cancelled by user"
             self.window.window.after(
                 0,
                 lambda: self.window.show_error("Download Error", error_msg)
