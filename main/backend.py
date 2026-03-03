@@ -44,7 +44,6 @@ class Backend:
             # Fetch metadata
             self.video_data = self.handler.fetch_metadata(url)
             
-            # Populate format dropdown
             self.window.format_combo['values'] = ['mkv', 'mp4', 'mp3']
             self.window.format_combo.current(0)
             
@@ -222,7 +221,6 @@ class Backend:
             )
         finally:
             self.window.window.after(0, self.window.hide_progress)
-            # self.window.window.after(0, self.window.clear_thumbnail_and_title)
 
     def _on_download_complete(self):
         """Called when download completes successfully."""

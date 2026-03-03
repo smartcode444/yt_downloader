@@ -15,6 +15,7 @@ class VideoHandler:
         self.ffmpeg_path = get_ffmpeg_path()
 
     def _ensure_ffmpeg(self):
+        """Check if FFmpeg is available and alert the user if not."""
         if not self.ffmpeg_path or not os.path.isdir(self.ffmpeg_path):
                 messagebox.showerror(
                 "FFmpeg Error",
@@ -92,9 +93,9 @@ class VideoHandler:
                     'quiet': False,
                     'no_warnings': False,
                     'progress_hooks': [self._progress_hook],
-                    'continuedl': True, # Allow resuming downloads if interrupted
-                    'noncheckcertificate': True, # Bypass SSL certificate checks for better compatibility
-                    'fixup': 'detect_or_warn', # Automatically fix common issues with downloaded files
+                    'continuedl': True, 
+                    'noncheckcertificate': True, 
+                    'fixup': 'detect_or_warn', 
                 }
             else:
                 ydl_opts = {
@@ -106,9 +107,9 @@ class VideoHandler:
                     'quiet': False,
                     'no_warnings': False,
                     'progress_hooks': [self._progress_hook],
-                    'continuedl': True, # Allow resuming downloads if interrupted
-                    'noncheckcertificate': True, # Bypass SSL certificate checks for better compatibility
-                    'fixup': 'detect_or_warn', # Automatically fix common issues with downloaded files
+                    'continuedl': True,
+                    'noncheckcertificate': True, 
+                    'fixup': 'detect_or_warn', 
                 }
               
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
