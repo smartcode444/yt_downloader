@@ -145,7 +145,7 @@ vh.start_download(format_id, 'C:/Downloads', 'mp4', lambda d: print(d))
 Add screenshots to `images/screenshots/` and reference them in the README using relative paths. Example markdown image tag:
 
 ```md
-![Main window](images/screenshots/main-window.png)
+![Main window](images/screenshot1.jpg)
 ```
 
 Tips: capture screenshots on Windows (`Win+Shift+S`), macOS (`Cmd+Shift+4`), or Linux (varies by distro). Commit the images to the repository before publishing.
