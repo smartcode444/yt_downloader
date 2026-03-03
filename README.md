@@ -19,9 +19,9 @@ A simple Python GUI application for downloading YouTube videos and audio using `
 yt_downloader/
 ├── backend.py       # Business logic connecting UI and VideoHandler
 ├── handler.py       # Wraps yt_dlp for metadata and downloading
-├── save_path.py     # Utilities for storing/retrieving save directory
+├── path.py          # Utilities for storing/retrieving save and ffmpeg directory
 ├── window.py        # Tkinter/ttkbootstrap GUI implementation
-├── config.json      # Stores the last used download directory
+├── config.json      # Stores the last used download directory, and ffmpeg directory
 └── README.md        # This file
 ```
 
@@ -31,7 +31,7 @@ yt_downloader/
 - `yt_dlp` for video handling
 - `ttkbootstrap` for styled Tkinter widgets
 - `Pillow` for thumbnail image display
-- `ffmpeg` executable located in project root or PATH
+- `ffmpeg` executable located in project root or provide the directory path in config.json.
 
 ## Installation
 
@@ -45,7 +45,7 @@ yt_downloader/
    ```sh
    pip install yt-dlp ttkbootstrap Pillow
    ```
-4. Ensure `ffmpeg.exe` is available in the project directory or system PATH.
+4. Ensure `ffmpeg.exe` is available in the project directory or or provide the directory path in config.json.
 
 ## Installing FFmpeg
 
@@ -99,7 +99,7 @@ FFmpeg is required for merging video/audio streams and MP3 conversion. Follow th
 
 1. Run the application:
    ```sh
-   python ui.py
+   python -m main.window
    ```
 2. Enter a YouTube URL and click **Check Video**.
 3. Choose desired format, resolution, and codec (if applicable).
@@ -148,12 +148,12 @@ python -m pip install -e .
 
 ```sh
 python -m pip install -r requirements.txt
-python main/window.py
+python -m main.window
 ```
 
 ## Usage Examples
 
-- GUI: Run `python main/window.py`, enter a YouTube URL, click **Check Video**, choose format/resolution/codec, then **Download**.
+- GUI: Run `python -m main.window`, enter a YouTube URL, click **Check Video**, choose format/resolution/codec, then **Download**.
 
 - CLI (headless, basic): you can create a small wrapper that calls the handler directly if you need automation. Example (pseudo):
 
