@@ -45,7 +45,7 @@ yt_downloader/
    ```sh
    pip install yt-dlp ttkbootstrap Pillow
    ```
-4. Ensure `ffmpeg.exe` is available in the project directory or ffmpeg path provided in config.json.
+4. Ensure `ffmpeg.exe` is available in the project directory or system PATH.
 
 ## Usage
 
@@ -62,11 +62,20 @@ yt_downloader/
 
 ## Configuration
 
-The application saves the chosen download directory in `config.json`. By default the file is created with an empty string as the path:
+The application stores settings in `config.json` located in the `main/` directory. By default it contains:
 ```json
-{"save_path": ""}
+{
+  "save_path": "",
+  "ffmpeg_path": "ffmpeg.exe"
+}
 ```
-You can edit or delete this file to reset the path.
+
+- **save_path**: Directory where downloaded videos are saved. Leave empty to prompt on each download.
+- **ffmpeg_path**: Full path to the `ffmpeg` binary or directory containing `ffmpeg.exe` and `ffprobe.exe`. Examples:
+  - Windows: `"C:/ffmpeg/bin"` (folder containing executables) or `"ffmpeg.exe"` (if in PATH)
+  - macOS/Linux: `"/usr/local/bin"` (folder) or `"ffmpeg"` (if in PATH)
+
+You can edit this file directly or delete it to reset settings to defaults.
 
 ## License
 
@@ -91,12 +100,12 @@ python -m pip install -e .
 
 ```sh
 python -m pip install -r requirements.txt
-python -m main.window
+python main/window.py
 ```
 
 ## Usage Examples
 
-- GUI: Run `python -m main.window`, enter a YouTube URL, click **Check Video**, choose format/resolution/codec, then **Download**.
+- GUI: Run `python main/window.py`, enter a YouTube URL, click **Check Video**, choose format/resolution/codec, then **Download**.
 
 - CLI (headless, basic): you can create a small wrapper that calls the handler directly if you need automation. Example (pseudo):
 
