@@ -47,6 +47,54 @@ yt_downloader/
    ```
 4. Ensure `ffmpeg.exe` is available in the project directory or system PATH.
 
+## Installing FFmpeg
+
+FFmpeg is required for merging video/audio streams and MP3 conversion. Follow these steps:
+
+### Windows
+
+1. Go to [ffmpeg.org/download](https://ffmpeg.org/download.html).
+2. Under **Get packages & executable files**, click the **Windows** icon.
+3. On the next page, under **Windows EXE Files**, you'll see precompiled builds from gyan.dev:
+   - Click **ffmpeg-git-essentials.7z** (minimal, ~50 MB) or **ffmpeg-git-full.7z** (complete, ~150 MB).
+   - Extract the `.7z` file to a folder like `C:\ffmpeg`.
+4. Add the extracted folder to your system PATH, or update `config.json`:
+   ```json
+   {
+     "ffmpeg_path": "C:/ffmpeg/bin"
+   }
+   ```
+5. Verify installation by opening PowerShell and running:
+   ```powershell
+   ffmpeg -version
+   ffprobe -version
+   ```
+   Both should print version info. If not, check your PATH or `config.json` setting.
+
+### macOS
+
+1. Using Homebrew (easiest):
+   ```sh
+   brew install ffmpeg
+   ```
+2. Or download from [ffmpeg.org](https://ffmpeg.org/download.html) and build from source.
+3. Update `config.json` if needed:
+   ```json
+   {
+     "ffmpeg_path": "/usr/local/bin"
+   }
+   ```
+
+### Linux
+
+1. Using package manager (Debian/Ubuntu):
+   ```sh
+   sudo apt update
+   sudo apt install ffmpeg
+   ```
+2. Or use your distribution's package manager (yum, pacman, etc.).
+3. Update `config.json` if the binary is in a non-standard location.
+
 ## Usage
 
 1. Run the application:
