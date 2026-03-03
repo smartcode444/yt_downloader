@@ -150,17 +150,15 @@ Add screenshots to `images/screenshots/` and reference them in the README using 
 
 Tips: capture screenshots on Windows (`Win+Shift+S`), macOS (`Cmd+Shift+4`), or Linux (varies by distro). Commit the images to the repository before publishing.
 
-## Testing cross-platform behavior
+## Running the unit tests
 
-1. Run the included platform opener test to verify opening files/folders on your platform:
+Run the full suite from the project root with pytest so Python can find the package:
 
 ```sh
-python scripts/test_platform.py
+python -m pytest tests
 ```
 
-2. For GUI file dialogs we use Tkinter's `filedialog.askdirectory()` — it maps to the native file picker on Windows/macOS/Linux. If you see issues:
-    - Ensure a display server is available on Linux (X11/Wayland) when running the GUI.
-    - On macOS you may need to allow accessibility or automation permissions for Python when opening file dialogs.
+Avoid invoking individual test files directly with `python` as that bypasses package resolution and leads to `ModuleNotFoundError: No module named 'main'`. Using `-m pytest` ensures the root directory is on `PYTHONPATH`
 
 ## Contributing
 
