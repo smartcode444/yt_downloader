@@ -179,7 +179,7 @@ class Backend:
         else:
             self.save_path = self.window.ask_directory()
             store_save_path(self.save_path)
-        
+
         # Clear the cancel event before starting new download
         self.cancel_event.clear()
 
@@ -212,15 +212,28 @@ class Backend:
             self.window.window.after(0, self._on_download_complete)
             
         except Exception as e:
-            error_msg = str(e)
             if self.cancel_event.is_set():
-                error_msg = "Download cancelled by user"
-            self.window.window.after(
-                0,
-                lambda: self.window.show_error("Download Error", error_msg)
-            )
+                self.window.window.after(0, self._handle_cancel_cleanup)
+            else:
+                error_msg = str(e)
+                self.window.window.after(0, lambda: self.window.show_error("Download Error", error_msg))
         finally:
             self.window.window.after(0, self.window.hide_progress)
+
+    def _handle_cancel_cleanup(self):
+        """Clean up partial files after cancellation."""
+        filepath = self.handler.current_filepath
+
+        if not filepath or not os.path.exists(filepath):
+            return 
+        
+        msg = f"Download cancelled. Would you like to delete the partial file to save space?\n\nFile: {os.path.basename(filepath)}"
+        if self.window.ask_yes_no("Download Cancelled", msg):
+            try:
+                os.remove(filepath)
+                self.window.show_info("File Deleted", "Partial file has been deleted.")
+            except Exception as e:
+                self.window.show_error("Cleanup Error", f"Could not delete file: {str(e)}")     
 
     def _on_download_complete(self):
         """Called when download completes successfully."""

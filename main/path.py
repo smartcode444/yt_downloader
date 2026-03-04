@@ -23,7 +23,7 @@ def _save(config):
 def get_save_path():
     config = _load()
     path = config.get("save_path", "")
-    if path and os.path.isdir(path):
+    if path and os.path.normpath(path):
         return path
     else:
         return None

@@ -12,11 +12,14 @@ class VideoHandler:
         self.metadata = None
         self.window = None
         self.progress_callback = None 
+        self.current_filepath = None
         self.ffmpeg_path = get_ffmpeg_path()
 
     def _ensure_ffmpeg(self):
         """Check if FFmpeg is available and alert the user if not."""
-        if not self.ffmpeg_path or not os.path.isdir(self.ffmpeg_path):
+        ffmpeg_exe = os.path.join(self.ffmpeg_path, 'ffmpeg.exe')
+        ffprobe_exe = os.path.join(self.ffmpeg_path, 'ffprobe.exe')
+        if not self.ffmpeg_path or not os.path.exists(ffmpeg_exe) or not os.path.exists(ffprobe_exe):
                 messagebox.showerror(
                 "FFmpeg Error",
                 "FFmpeg and FFprobe executable not found." 
@@ -74,7 +77,6 @@ class VideoHandler:
         """Download video in specified format with progress tracking."""
         self._ensure_ffmpeg()
 
-
         try:
             self.progress_callback = progress_callback
             self.cancel_event = cancel_event
@@ -123,6 +125,12 @@ class VideoHandler:
 
     def _progress_hook(self, d):
         """Internal progress hook for yt_dlp."""
+        # Capture the filename yt-dlp is currently using
+        if d.get('tmpfilename'):
+            self.current_filepath = d.get('tmpfilename')
+        elif d.get('filename'):
+            self.current_filepath = d.get('filename')
+
         # Check if cancel was requested
         if self.cancel_event and self.cancel_event.is_set():
             raise Exception("Download cancelled by user")
