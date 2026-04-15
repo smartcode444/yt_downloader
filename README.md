@@ -36,16 +36,25 @@ yt_downloader/
 ## Installation
 
 1. Clone or download the repository.
-2. Create and activate a virtual environment:
-   ```sh
-   python -m venv venv
-   .\venv\Scripts\activate  # Windows
-   ```
-3. Install dependencies:
+2. Install dependencies:
    ```sh
    pip install yt-dlp ttkbootstrap Pillow
    ```
 4. Ensure `ffmpeg.exe` is available in the project directory or or provide the directory path in config.json.
+
+## Usage
+
+1. Run the application:
+   ```sh
+   python -m main.window
+   ```
+2. Enter a YouTube URL and click **Check Video**.
+3. Choose desired format, resolution, and codec (if applicable).
+4. Click **Download** and select a save directory if prompted.
+5. During downloading a **Cancel** button will appear – click it to abort the transfer.  
+   The download will stop and a partial file may remain; delete or restart as needed.
+6. Monitor progress in the UI; open folder after completion if prompted.
+
 
 ## Installing FFmpeg
 
@@ -95,19 +104,6 @@ FFmpeg is required for merging video/audio streams and MP3 conversion. Follow th
 2. Or use your distribution's package manager (yum, pacman, etc.).
 3. Update `config.json` if the binary is in a non-standard location.
 
-## Usage
-
-1. Run the application:
-   ```sh
-   python -m main.window
-   ```
-2. Enter a YouTube URL and click **Check Video**.
-3. Choose desired format, resolution, and codec (if applicable).
-4. Click **Download** and select a save directory if prompted.
-5. During downloading a **Cancel** button will appear – click it to abort the transfer.  
-   The download will stop and a partial file may remain; delete or restart as needed.
-6. Monitor progress in the UI; open folder after completion if prompted.
-
 ## Configuration
 
 The application stores settings in `config.json` located in the `main/` directory. By default it contains:
@@ -136,20 +132,6 @@ This project is provided as-is under the MIT License.
 
 Enjoy downloading your favorite videos!
 
-## Packaging & Installation
-
-- Install from source (editable):
-
-```sh
-python -m pip install -e .
-```
-
-- Or install dependencies first and run directly:
-
-```sh
-python -m pip install -r requirements.txt
-python -m main.window
-```
 
 ## Usage Examples
 
