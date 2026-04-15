@@ -1,12 +1,15 @@
 import json
 import os
+import sys 
 
 DEFAULT_CONFIG = {"save_path": "", "ffmpeg_path": "ffmpeg.exe"}
 
-base_path = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False): 
+    base_path = os.path.dirname(sys.executable)
+else:
+    base_path = os.path.dirname(os.path.abspath(__file__))
 
 CONFIG_PATH = os.path.join(base_path, 'config.json')
-print(f"Config path: {CONFIG_PATH}")  # Debug: Print the config path being used
 
 def _load():
     try:
@@ -34,7 +37,10 @@ def store_save_path(save_path):
     _save(config)
 
 def get_ffmpeg_path():
-    config = _load()
-    return config.get('ffmpeg_path', DEFAULT_CONFIG['ffmpeg_path'])
+    if getattr(sys, 'frozen', False):  
+        return base_path
+    else:
+        config = _load()
+        return config.get('ffmpeg_path', DEFAULT_CONFIG['ffmpeg_path'])
 
 

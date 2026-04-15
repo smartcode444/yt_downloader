@@ -12,6 +12,7 @@ class Backend:
         self.window = window
         self.handler = VideoHandler()
         self.video_data = None
+        self.fetch_error = None
         self.selected_format = None
         self.cancel_event = threading.Event()
 
@@ -23,9 +24,16 @@ class Backend:
             re.IGNORECASE 
         )
         return bool(pattern)
+    """Loading video information"""
+    def fetch_data(self, url):
+        try:
+            self.fetch_error = None
+            self.video_data = self.handler.fetch_metadata(url)
+        except Exception as e:
+            self.video_data = None
+            # self.fetch_error = str(e)
 
     def fetch_video(self):
-        """Fetch metadata for the entered YouTube URL."""
         url = self.window.url.get().strip()
 
         if not url:
@@ -38,23 +46,36 @@ class Backend:
 
         try:
             # Show loading message
+            self.window._clear_loading_indicator()
             self.window._loading_indicator()
             self.window.window.update() # 
             
             # Fetch metadata
-            self.video_data = self.handler.fetch_metadata(url)
+            # self.video_data = self.handler.fetch_metadata(url)
+            fetch_data_thread = threading.Thread(
+                target=self.fetch_data, 
+                args=(url,),
+                daemon=True
+            )
+            fetch_data_thread.start()
+            fetch_data_thread.join()
+
+            if self.fetch_error or not self.video_data or not self.handler.metadata:
+                raise Exception(self.fetch_error or "No video metadata was returned")
             
             self.window.format_combo['values'] = ['mkv', 'mp4', 'mp3']
             self.window.format_combo.current(0)
             
             self.window._clear_loading_indicator()
-            self.window.show_info("Success", f"Video loaded: {self.handler.title}")
+            
+            if self.handler.title: 
+                self.window.show_info("Success", f"Video loaded: {self.handler.title}")
 
             # Fetch and display thumbnail
             if self.window.thumbnail_label and self.window.title_label:
                 self.window.clear_thumbnail_and_title()
            
-            thumbnail_response = fetch_thumbnail_response(self.handler.metadata.get('id'))
+            thumbnail_response = fetch_thumbnail_response(self.handler.metadata.get('id')) # Fetch thumbnail response
             title = self.handler.title
             if thumbnail_response:
                 self.window.display_thumbnail_and_title(thumbnail_response, title=title)
@@ -175,10 +196,14 @@ class Backend:
         self.save_path = get_save_path()
         if self.save_path:
             self.save_path = self.window.ask_directory(initial_dir=self.save_path)
-            store_save_path(self.save_path)
         else:
             self.save_path = self.window.ask_directory()
-            store_save_path(self.save_path)
+
+        if not self.save_path:
+            self.window.show_info("Cancelled", "Download location selection was cancelled.")
+            return
+
+        store_save_path(self.save_path)
 
         # Clear the cancel event before starting new download
         self.cancel_event.clear()

@@ -1,5 +1,3 @@
-from PIL import Image, ImageTk
-from io import BytesIO
 import tkinter as tk 
 import ttkbootstrap as ttk
 from tkinter import messagebox, filedialog
@@ -9,23 +7,31 @@ class Window:
     """Manages the YouTube Downloader UI."""
     
     def __init__(self):
-        self.window = ttk.Window(themename='darkly')
         self.backend = Backend(self)
+        self.window = ttk.Window(themename='darkly')
+        self.window.withdraw() # Hide the main window until the welcome screen is done
+
+        self.welcome_window = tk.Toplevel(self.window) # Create a separate window for the welcome screen, so we can destroy it without affecting the main window
         
+        # Window dimensions
+        width, height = self.welcome_window.winfo_screenwidth(), self.welcome_window.winfo_screenheight()
+        self.window_width, self.window_height = 800, 600
+        self.window_x, self.window_y  = int(width - self.window_width) // 2, int(height - self.window_height) // 2
+
         # URL entry
-        self.url = tk.StringVar()
+        self.url = tk.StringVar(master=self.window)
         
         # Format selection
         self.format_combo = None
-        self.format_var = tk.StringVar()
+        self.format_var = tk.StringVar(master=self.window)
         
         # Resolution selection
         self.res_combo = None
-        self.res_var = tk.StringVar()
+        self.res_var = tk.StringVar(master=self.window)
         
         # Video codec selection
         self.vcodec_combo = None
-        self.vcodec_var = tk.StringVar()
+        self.vcodec_var = tk.StringVar(master=self.window)
         
         # Download button
         self.download_btn = None
@@ -43,6 +49,8 @@ class Window:
         self.title_label = None
 
         self.cancel_btn = None
+
+        self._welcome_screen() 
         
     def setup(self):
         """Initialize the window and all UI elements."""
@@ -53,17 +61,39 @@ class Window:
         self._setup_progress()
         self.author_info()  
 
+    def _welcome_screen(self):
+        """Configure the welcome screen"""
+        self.welcome_window.title("Welcome")
+        self.welcome_window.geometry(f'{self.window_width}x{self.window_height}+{self.window_x}+{self.window_y}')
+        
+        # Remove title bar for a cleaner splash screen look
+        self.welcome_window.overrideredirect(True) 
+
+        welcome_label = tk.Label(
+            self.welcome_window, 
+            text="Thank you for using VeloTube!\n"
+                 "This application allows you to easily download YouTube videos\n" 
+                 "in various formats and resolutions.\n"
+                 "\n"
+                 "Simply enter the URL of the YouTube video you want to download,\n"
+                 "select your preferred format and resolution, and click the Download button.\n"
+                 "\n"
+                 "Please note that downloading copyrighted content without permission\n" \
+                 "may violate YouTube's terms of service.\n",
+            font=("Arial", 14)
+                )
+        welcome_label.pack(pady=80)
+        
+        self.welcome_window.after(3000, self.setup)
+
     def _setup_root(self):
         """Configure the root window."""
-        width = self.window.winfo_screenwidth()
-        height = self.window.winfo_screenheight()
-        window_width = 800
-        window_height = 600
-        window_x = int(width - window_width) // 2
-        window_y = int(height - window_height) // 2
-        self.window.title('YouTube Downloader')
-        self.window.geometry(f'{window_width}x{window_height}+{window_x}+{window_y}')
-        self.window.resizable(False, False)
+        if self.welcome_window and self.welcome_window.winfo_exists():
+            self.welcome_window.destroy()
+        self.window.title('VeloTube -- YouTube Downloader')
+        self.window.geometry(f'{self.window_width}x{self.window_height}+{self.window_x}+{self.window_y}')
+        self.window.deiconify() # Show the main window after welcome screen is done
+        
 
     def _setup_title(self):
         """Add the title label."""
@@ -187,10 +217,14 @@ class Window:
     def display_thumbnail_and_title(self, response, title=None):
         """Get thumbnail response and display thumbnail on the UI."""
         try:
+            from PIL import Image, ImageTk
+            from io import BytesIO
             # Open the image using Pillow from the in-memory bytes
             image = Image.open(BytesIO(response.content))
-        except IOError as e:
+        except (IOError, ValueError) as e:
             print(f"Error opening image with Pillow: {e}. The thumbnail might not exist for this video/resolution.")
+            return
+
         thumbnail = ImageTk.PhotoImage(image)
         self.thumbnail_label = ttk.Label(self.window, image=thumbnail)
         self.thumbnail_label.image = thumbnail  # Keep a reference to avoid garbage collection
@@ -202,10 +236,17 @@ class Window:
 
     def clear_thumbnail_and_title(self):
         """Clear thumbnail and title display."""
-        self.thumbnail_label.config(image='')  # Clear the image
-        self.thumbnail_label.image = None  # Remove reference to the image
-        self.thumbnail_label.pack_forget()  # Hide the label
-        self.title_label.pack_forget()  # Hide the title label
+        if self.thumbnail_label:
+            self.thumbnail_label.config(image='')  # Clear the image
+            self.thumbnail_label.image = None  # Remove reference to the image
+            self.thumbnail_label.pack_forget()  # Hide the label
+            self.thumbnail_label.destroy()
+            self.thumbnail_label = None
+
+        if self.title_label:
+            self.title_label.pack_forget()  # Hide the title label
+            self.title_label.destroy()
+            self.title_label = None
 
     def show_error(self, title, message):
         """Display an error dialog."""
@@ -250,5 +291,5 @@ class Window:
 
 if __name__ == "__main__":
     app = Window()
-    app.setup()
+    # app.setup()
     app.run()

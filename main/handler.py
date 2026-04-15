@@ -1,7 +1,10 @@
-import yt_dlp
+from yt_dlp import YoutubeDL
 import os
 from tkinter import messagebox
 from main.path import get_ffmpeg_path
+
+class FFmpegException(Exception):
+    pass
 
 class VideoHandler:
     """Handles video downloading and metadata extraction using yt_dlp."""
@@ -17,10 +20,12 @@ class VideoHandler:
 
     def _ensure_ffmpeg(self):
         """Check if FFmpeg is available and alert the user if not."""
+        print(f"\nFFmpeg directory: {self.ffmpeg_path}\n")
         ffmpeg_exe = os.path.join(self.ffmpeg_path, 'ffmpeg.exe')
         ffprobe_exe = os.path.join(self.ffmpeg_path, 'ffprobe.exe')
+        print(f"FFprobe path: {ffprobe_exe}\nFFmpeg path: {ffmpeg_exe}")
         if not self.ffmpeg_path or not os.path.exists(ffmpeg_exe) or not os.path.exists(ffprobe_exe):
-                messagebox.showerror(
+            messagebox.showerror(
                 "FFmpeg Error",
                 "FFmpeg and FFprobe executable not found." 
                 "High-quality downloads and MP3 conversions will fail without these."
@@ -28,12 +33,13 @@ class VideoHandler:
                 "https://ffmpeg.org and either put `ffmpeg.exe` and `ffprobe.exe` in the "
                 "project directory or specify their directory absolute path in config.json."
             )
+            raise FFmpegException("FFmpeg and FFprobe executable not found")
 
     def fetch_metadata(self, url):
         """Fetch metadata for a given YouTube video URL."""
         try:
             ydl_opts = {'quiet': True, 'no_warnings': True}
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with YoutubeDL(ydl_opts) as ydl:
                 self.metadata = ydl.extract_info(url, download=False)
                 self.title = self.metadata.get('title', 'Unknown Video')
                 self.url = url
@@ -75,11 +81,13 @@ class VideoHandler:
 
     def start_download(self, format_id, save_path, output_format, progress_callback, cancel_event=None):
         """Download video in specified format with progress tracking."""
-        self._ensure_ffmpeg()
+        # self._ensure_ffmpeg()
 
         try:
+            
             self.progress_callback = progress_callback
             self.cancel_event = cancel_event
+            self._ensure_ffmpeg()
             
             if output_format == 'mp3':
                 ydl_opts = {
@@ -98,6 +106,7 @@ class VideoHandler:
                     'continuedl': True, 
                     'noncheckcertificate': True, 
                     'fixup': 'detect_or_warn', 
+                    'concurrent_fragment_downloads': 4,
                 }
             else:
                 ydl_opts = {
@@ -112,9 +121,10 @@ class VideoHandler:
                     'continuedl': True,
                     'noncheckcertificate': True, 
                     'fixup': 'detect_or_warn', 
-                }
+                    'concurrent_fragment_downloads': 4,
+                } 
               
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])
             
             return True
