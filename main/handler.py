@@ -1,5 +1,5 @@
-from yt_dlp import YoutubeDL
-import os
+from yt_dlp import YoutubeDL, utils
+import os, socket
 from tkinter import messagebox
 from main.path import get_ffmpeg_path
 
@@ -10,7 +10,7 @@ class VideoHandler:
     """Handles video downloading and metadata extraction using yt_dlp."""
     
     def __init__(self):
-        self.title = None
+        self.title = None 
         self.url = None
         self.metadata = None
         self.window = None
@@ -37,15 +37,26 @@ class VideoHandler:
 
     def fetch_metadata(self, url):
         """Fetch metadata for a given YouTube video URL."""
+        # original_timeout  = socket.getdefaulttimeout()
         try:
+            socket.setdefaulttimeout(8)
             ydl_opts = {'quiet': True, 'no_warnings': True}
             with YoutubeDL(ydl_opts) as ydl:
                 self.metadata = ydl.extract_info(url, download=False)
                 self.title = self.metadata.get('title', 'Unknown Video')
                 self.url = url
                 return self._parse_formats()
+            
+        # except (socket.timeout, utils.DownloadError):
+            # print("Error: metadata extraction timed out!")
+        
+        # finally: 
+        #     socket.setdefaulttimeout(original_timeout)
+        #     print("Global timeout settings returned back to normal.")
+
         except Exception as e:
             raise Exception(f"Failed to fetch video metadata: {str(e)}")
+
 
     def _parse_formats(self):
         """Parse and return available video formats."""
@@ -98,6 +109,7 @@ class VideoHandler:
                         'preferredquality': '192',
                     }],
                     'paths': {'home': save_path},
+                    'nopart': True,
                     'ffmpeg_location': self.ffmpeg_path,
                     'outtmpl': '%(title)s.%(ext)s',
                     'quiet': False,
@@ -112,6 +124,7 @@ class VideoHandler:
                 ydl_opts = {
                     'format': f'{format_id}+bestaudio/best',
                     'paths': {'home': save_path},
+                    'nopart': True,
                     'ffmpeg_location': self.ffmpeg_path,
                     'outtmpl': '%(title)s.%(ext)s',
                     'merge_output_format': output_format,

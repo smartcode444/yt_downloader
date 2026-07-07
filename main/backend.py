@@ -1,7 +1,7 @@
 import threading
 import re
 import os
-from main.handler import VideoHandler
+from main.handler import VideoHandler 
 from main.thumbnail import fetch_thumbnail_response
 from main.path import get_save_path, store_save_path
 
@@ -24,14 +24,57 @@ class Backend:
             re.IGNORECASE 
         )
         return bool(pattern)
-    """Loading video information"""
+    
     def fetch_data(self, url):
+        """Fetching video information"""
         try:
             self.fetch_error = None
             self.video_data = self.handler.fetch_metadata(url)
-        except Exception as e:
-            self.video_data = None
+        # except Exception as e:
+        #     self.video_data = None
             # self.fetch_error = str(e)
+
+            if self.fetch_error or not self.video_data or not self.handler.metadata:
+                raise Exception(self.fetch_error or "No video metadata was returned")
+            
+            
+            video_id = self.handler.metadata.get('id')
+            thumbnail_response = fetch_thumbnail_response(video_id)
+            title = self.handler.title
+
+            self.window.window.after(0, lambda: self._on_fetch_success(thumbnail_response, title))
+
+        except Exception:
+            # Safely send the error back to the GUI thread
+            self.window.window.after(0, lambda: self._on_fetch_failure())
+
+    def _on_fetch_success(self, thumbnail, title):
+        """ This runs safely on the MAIN GUI thread after the worker is done. """
+        self.window.format_combo['values'] = ['mkv', 'mp4', 'mp3']
+        # self.window.format_combo.current(0)
+        
+        self.window._clear_loading_indicator()
+        
+        if self.handler.title: 
+            self.window.show_info("Success", f"Video loaded: {self.handler.title}")
+
+        # Fetch and display thumbnail
+        if self.window.thumbnail_label and self.window.title_label:
+            self.window.clear_thumbnail_and_title()
+        
+        thumbnail_response = thumbnail
+        title = self.handler.title
+        if thumbnail_response:
+            self.window.display_thumbnail_and_title(thumbnail_response, title=title)
+
+    def _on_fetch_failure(self):
+        """ This handles errors safely on the MAIN GUI thread. """
+        self.window._clear_loading_indicator()
+        self.window.hide_progress()
+        self.window.show_error(
+            "Error",
+            f"Could not fetch video: \n\nPlease check:\n• Internet connection\n• Valid YouTube URL"
+        )
 
     def fetch_video(self):
         url = self.window.url.get().strip()
@@ -58,34 +101,16 @@ class Backend:
                 daemon=True
             )
             fetch_data_thread.start()
-            fetch_data_thread.join()
+            # fetch_data_thread.join()
+            # stop_signal = threading.Event()
+            # while not stop_signal.is_set():
+            #     event_is_set = stop_signal.wait(timeout=10)
+            #     if event_is_set and not self.video_data:
+            #         raise Execption
 
-            if self.fetch_error or not self.video_data or not self.handler.metadata:
-                raise Exception(self.fetch_error or "No video metadata was returned")
-            
-            self.window.format_combo['values'] = ['mkv', 'mp4', 'mp3']
-            self.window.format_combo.current(0)
-            
-            self.window._clear_loading_indicator()
-            
-            if self.handler.title: 
-                self.window.show_info("Success", f"Video loaded: {self.handler.title}")
-
-            # Fetch and display thumbnail
-            if self.window.thumbnail_label and self.window.title_label:
-                self.window.clear_thumbnail_and_title()
-           
-            thumbnail_response = fetch_thumbnail_response(self.handler.metadata.get('id')) # Fetch thumbnail response
-            title = self.handler.title
-            if thumbnail_response:
-                self.window.display_thumbnail_and_title(thumbnail_response, title=title)
-            
         except Exception as e:
             self.window.hide_progress()
-            self.window.show_error(
-                "Error",
-                f"Could not fetch video: {str(e)}\n\nPlease check:\n• Internet connection\n• Valid YouTube URL"
-            )
+            self.window.show_error("Error", f"Could not initiate fetch: {str(e)}")
  
 
     def on_format_selected(self, event=None):

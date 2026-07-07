@@ -1,7 +1,19 @@
+import os, sys
+
 import tkinter as tk 
 import ttkbootstrap as ttk
 from tkinter import messagebox, filedialog
 from main.backend import Backend
+
+def get_resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class Window:
     """Manages the YouTube Downloader UI."""
@@ -9,6 +21,8 @@ class Window:
     def __init__(self):
         self.backend = Backend(self)
         self.window = ttk.Window(themename='darkly')
+        icon_path = get_resource_path('resources/tubeflow32x32.ico')
+        self.window.iconbitmap(icon_path)
         self.window.withdraw() # Hide the main window until the welcome screen is done
 
         self.welcome_window = tk.Toplevel(self.window) # Create a separate window for the welcome screen, so we can destroy it without affecting the main window
@@ -51,7 +65,7 @@ class Window:
         self.cancel_btn = None
 
         self._welcome_screen() 
-        
+
     def setup(self):
         """Initialize the window and all UI elements."""
         self._setup_root()
@@ -119,7 +133,7 @@ class Window:
         fetch_btn.pack(side='left', padx=5)
         
         frame.pack(pady=10)
-
+ 
     def _setup_action(self):
         """Add selection comboboxes and download button."""
         self.action_frame = ttk.Frame(master=self.window)
