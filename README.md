@@ -16,7 +16,7 @@ A simple Python GUI application for downloading YouTube videos and audio using `
 ## Project Structure
 
 ```
-yt_downloader/
+main/
 ├── backend.py       # Business logic connecting UI and VideoHandler
 ├── handler.py       # Wraps yt_dlp for metadata and downloading
 ├── path.py          # Utilities for storing/retrieving save and ffmpeg directory
