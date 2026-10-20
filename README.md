@@ -2,6 +2,8 @@
 
 A simple Python GUI application for downloading YouTube videos and audio using `yt_dlp`.
 
+<img width="805" height="629" alt="557568384-738255c4-93a6-469f-838a-707348ed949d" src="https://github.com/user-attachments/assets/c400db88-dc2a-40e9-b2bd-60b487abed1c" />
+
 ## Features
 
 - Fetch video metadata (title, available video-only formats).
@@ -169,13 +171,6 @@ vh.start_download(format_id, 'C:/Downloads', 'mp4', lambda d: print(d))
 - Permissions issues when opening folders:
    - On Windows, the app uses `os.startfile` to open folders; ensure your user has access rights.
    - On macOS/Linux the repository provides a small test script `scripts/test_platform.py` that attempts to open a file using the platform default opener — run it to verify your system opener is available.
-
-## Screenshots
-
-```md
-![screenshot1](https://github.com/user-attachments/assets/08134d7b-eac2-4129-bd6f-6cb88b7b2ba0)
-![screenshot2](https://github.com/user-attachments/assets/738255c4-93a6-469f-838a-707348ed949d)
-```
 
 ## Running the unit tests
 
